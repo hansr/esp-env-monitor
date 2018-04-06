@@ -5,12 +5,12 @@ ESP8266-based temp and light monitor used in Exosite's Minneapolis office.
 Overview
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This is a project that demonstrates how to do two-way secure communications 
-with Exosite using the Sparkfun ESP8266 Thing Dev.  This project is used on 
-around 50 Thing Dev systems at the Exosite Minneapolis office to monitor 
-temperature through-out the office.  The User Interface used by multiple 
-team members and groups is the Remote Condition Monitoring system - Exosite's 
-leading application for IIoT network operations center and field service 
-enablement efforts.
+with Exosite using the Sparkfun ESP8266 Thing Dev (https://www.sparkfun.com/products/13804).  
+This project is used on around 50 Thing Dev systems at the Exosite Minneapolis 
+office to monitor temperature through-out the office.  The User Interface used 
+by multiple team members and groups is the Remote Condition Monitoring system - 
+Exosite's leading application for IIoT network operations center and field 
+service enablement efforts.
 
 License is BSD, Copyright 2018, Exosite LLC (see LICENSE file)
 
