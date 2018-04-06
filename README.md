@@ -71,3 +71,13 @@ More Information
 
 * For support, email: support@exosite.com (reference the github project, etc)
   * Web: https://support.exosite.com (forums, knowledge base, ticket system)
+  
+* FAQ
+  * Q: Why does the code use GPIOs for VCC/GND for the temp sensor?
+    * A: By using GPIO 16/15 as VCC/GND, the selected temp sensor (Analog Devices TMP36 - https://cdn.sparkfun.com/datasheets/Sensors/Temp/TMP35_36_37.pdf) can be plugged straight into a bread board without any additional jumpers
+  
+  * Q: How do I add more sensors to the system?
+    * A: Since the ESP8266 only has a single ADC input, any others sensors added to the system need to have a one-wire or I2C interface.  Check out topics on Arduino I2C and one-wire sensors, like: https://github.com/TaaraLabs/OneWireHumidityLight-Demo
+    
+  * Q: How do I see the information in the Remote Condition Monitoring application?
+    * A: A data translation script [git repo needed] needs to be added to the Product to translate the data coming in from the devices into a "raw_data" resource that stores the data in RCM-specific data packing.  After provisioning an RCM application instance into your Murano account, the RCM instance needs to be connected to the Product (using the Product Service config on the Services page), and then you can use the RCM workflow to take it from there.  
