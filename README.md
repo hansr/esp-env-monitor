@@ -32,25 +32,42 @@ Quick Start
 * Create an Exosite account
   * Go to https://exosite.io and sign up!
 
-* Create a Murano Product
-  * 
+* Create & Configure a Murano Product
+  * From within Murano, go to your Solutions page and Create Solution -> choose 
+    Product Type and "Start from Scratch"
+  * Go to your Product's Settings page and choose "HTTP API" under Protocol, 
+    "Opaque" under Identity, and check "Enable Provisioning" and "Allow devices
+    to register their own identity" under "Provisioning"
 
-* Find your Product ID from the Arduino serial console and add it to Murano
-  *
+* Copy your Product ID from Murano and update your Arduino code
+  * Click on the "ID" icon in the upper left to copy the Product ID to your 
+    clipboard and paste it over the value that says "PUTPRODUCTIDHERE"
 
-* Start communicating!
-  *
+* Configure your WiFi parmaters
+  * Set the WiFi SSID by replacing "PUTWIFISSIDHERE" with the SSID, and set the
+    WiFi Passphrase by replacing "PUTWIFIPASSPHRASEHERE" with the passphrase
+    
+* Upload the firmware and start communicating!
+  * Plug your Sparkfun Thing Dev board into a USB cable and program from the
+    Arduino tool
+  * If you have all the settings correct, the board will start flowing data to
+    your Murano account.  If you pull up your Product's "Devices" page, you'll
+    see a list of devices you have provisioned under the Product - since you
+    just created the Product, you'll either see none, or your new device listed
+    there.  If you don't see your device yet, you can wait around to see if it
+    will appear, or you can debug.
+  * To debug, pull up the Arduino Serial Monitor and read the messages to see
+    where you are getting stuck.  Could be WiFi settings, could be Product ID, 
+    could be your router won't let the traffic through.  You can also open the
+    "Logs" page under your Product area in Murano.  The Logs will show all
+    valid communications with any device in your Product.
   
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 More Information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Exosite Documentation -> https://docs.exosite.com
 
-* More about RCM -> 
+* More about RCM -> https://exosite.com/iot-solutions/condition-monitoring/
 
-**Notes**:
-.
-
-***Support***:
-* Email: support@exosite.com (reference the github project, etc)
-* Web: https://support.exosite.com (forums, knowledge base, ticket system)
+* For support, email: support@exosite.com (reference the github project, etc)
+  * Web: https://support.exosite.com (forums, knowledge base, ticket system)
