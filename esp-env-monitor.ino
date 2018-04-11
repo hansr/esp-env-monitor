@@ -31,7 +31,7 @@ const char* password = "PUTWIFIPASSPHRASEHERE";
 
 // Communication URL for Exosite
 const char* host = "PUTPRODUCTIDHERE.m2.exosite.io";
-const int httpsPort = 443;
+const int hostPort = 443;  // use SSL port
 
 // SHA1 fingerprint of the Exosite certificate
 const char* fingerprint = "51 8C 0D C5 A1 6C 9E C2 33 11 F9 34 8A 89 47 8A 3B 47 AE 8D";
@@ -61,14 +61,14 @@ void setup() {
   pinMode(TEMP_GND, INPUT); 
   pinMode(TEMP_VCC, INPUT); 
   pinMode(LED, OUTPUT);
-  blinkLED();
+  blinkLED(5);
     
   // Init EEPROM
   EEPROM.begin(40);
   
   // Configure Exosite
   exosite.begin();
-  exosite.setDomain(productId".m2.exosite.io");
+  exosite.setDomain(productId".m2.exosite.io", hostPort);
 
   // Configure WiFi
   setup_wifi();
@@ -106,7 +106,7 @@ void loop() {
   // Check if we should reprovision.
   if (errorCount >= reprovisionAfter) {
     Serial.println("---- Attempting Reprovision ----");    
-    blinkLED();
+    blinkLED(4);
     if (exosite.provision(productId, productId, macString)) {
       Serial.println("Reprovision: Provision Succeeded");
       EEPROM.commit();
@@ -122,12 +122,12 @@ void loop() {
   //Make Write and Read request to Exosite Platform
   Serial.println("---- Do Read and Write ----");
   if (exosite.writeRead(writeString, readString, returnString)) {
+    errorCount = 0;
     if (prevRead != returnString) {
       prevRead = returnString;
       Serial.print("Returned: ");
       Serial.println(returnString);
       Serial.println("Parse out dataport alias values");
-      errorCount = 0;
   
       // Read out our data ports
       for(;;){
@@ -182,8 +182,14 @@ void loop() {
     Serial.println("No Connection");
     errorCount++;
   }
-  if (errorCount) delay(1000);
-    else delay(10000); // Operate every 10 seconds  
+  if (errorCount) {
+    blinkLED(1);
+    Serial.println("Connection errors, retrying in one second.");
+    delay(1000);
+  }  else {
+    doubleBlinkLED(1);
+    delay(10000); // Operate every 10 seconds  
+  }
 }
 
 
@@ -265,21 +271,36 @@ int readADC() {
 /*******************************************************************************
 * Blink LED
 *******************************************************************************/
-int blinkLED() { 
-  digitalWrite(LED, 1);  // turn LED off
+void blinkLED(unsigned char n) { 
+  unsigned char i;
+  
+  for(i = 0; i < n; i++) {
+    digitalWrite(LED, 1);  // turn LED off
     delay(200);
-  digitalWrite(LED, 0);  // turn LED on
-  delay(200);
-  digitalWrite(LED, 1);  // turn LED off
-  delay(200);
-  digitalWrite(LED, 0);  // turn LED on
-  delay(200);
-  digitalWrite(LED, 1);  // turn LED off  
-  delay(200);
-  digitalWrite(LED, 0);  // turn LED on
-  delay(200);
-  digitalWrite(LED, 1);  // turn LED off  
+    digitalWrite(LED, 0);  // turn LED on
+    delay(200);
+    digitalWrite(LED, 1);  // turn LED off
+  }
 }
- 
+
+
+/*******************************************************************************
+* Double Blink LED
+*******************************************************************************/
+void doubleBlinkLED(unsigned char n) { 
+  unsigned char i;
+  
+  for(i = 0; i < n; i++) {
+    digitalWrite(LED, 1);  // turn LED off
+    delay(200);
+    digitalWrite(LED, 0);  // turn LED on
+    delay(100);
+    digitalWrite(LED, 1);  // turn LED off
+    delay(100);
+    digitalWrite(LED, 0);  // turn LED on
+    delay(100);
+    digitalWrite(LED, 1);  // turn LED off
+  }
+}
 
 
