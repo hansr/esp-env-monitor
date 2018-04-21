@@ -52,7 +52,10 @@ unsigned char errorCount = reprovisionAfter;  // Force Provision On First Loop
 
 WiFiClientSecure client;
 Exosite exosite(&client);
-
+// Setup a oneWire instance to communicate with any OneWire devices  
+OneWire oneWire(ONE_WIRE_BUS); 
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire);
 
 /*******************************************************************************
 * Startup Entry Point
@@ -69,6 +72,9 @@ void setup() {
     
   // Init EEPROM
   EEPROM.begin(40);
+
+  // startup dallas and onewire libraries
+  sensors.begin(); 
   
   // Configure Exosite
   exosite.begin();
@@ -107,6 +113,7 @@ void loop() {
   int d5_val = 0;
   char d5_str[10];
   int a0_val = 0;
+  double temp_val = 0.0;
 
   // Check if we should reprovision.
   if (errorCount >= reprovisionAfter) {
@@ -128,9 +135,16 @@ void loop() {
   a0_val = readAnalogSensor();
   Serial.print("A0 = "); 
   Serial.println(String(a0_val));
+
+  // read the connected digital temp sensor
+  sensors.requestTemperatures(); 
+  temp_val = sensors.getTempCByIndex(0);
+  Serial.print("Temperature = ");
+  Serial.println(String(temp_val)); 
   
   writeString += "uptime="+ uptime_str;
   writeString += "&a0="+ String(a0_val);
+  writeString += "&data_in={ \"001\":" + String(temp_val) + "}";
 
   //Make Write and Read request to Exosite Platform
   Serial.println("---- Do Read and Write ----");
