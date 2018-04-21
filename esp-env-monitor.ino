@@ -25,16 +25,16 @@
 #define ADC_VCC_PIN 16
 #define LED 5
 #define SL_DRIVER_VERSION 1
-#define productId "s17hbts5w1an4000" // Must be updated to match the Product ID for each project
+#define productId "PUTPRODUCTIDHERE" // Must be updated to match the Product ID for each project
 
 /* Constants */
 // WiFi credentials
 //error-update-ssid,password
-const char* ssid     = "Vandersanden";
-const char* password = "Gocubsgo715!";
+const char* ssid     = "PUTWIFISSIDHERE";
+const char* password = "PUTWIFIPASSPHRASEHERE";
 
 // Communication URL for Exosite
-const char* host = "PUTPRODUCTIDHERE.m2.exosite.io";
+const char* host = productId".m2.exosite.io";
 const int hostPort = 443;  // use SSL port
 
 // SHA1 fingerprint of the Exosite certificate
@@ -72,7 +72,7 @@ void setup() {
   
   // Configure Exosite
   exosite.begin();
-  exosite.setDomain(productId".m2.exosite.io", hostPort);
+  exosite.setDomain(host, hostPort);
 
   // Configure WiFi
   setup_wifi();
