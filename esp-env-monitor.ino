@@ -98,6 +98,9 @@ void setup() {
     Serial.println("setup: Provision Check Done");
   }
   
+  // send config details to RCM.
+  writeDeviceConfigRCM(); 
+  
 }
 
 
@@ -254,6 +257,30 @@ void setup_wifi(void){
   // Print Some Useful Info
   Serial.print(F("wifi: MAC Address: "));
   Serial.println(macString);
+}
+
+
+/*******************************************************************************
+* Write Device Config RCM
+* - send config_io, so RCM knows we will be sending temperature in celsius
+*******************************************************************************/
+int writeDeviceConfigRCM() {
+  int rtn = 0;
+  int num_tries = 0;
+  
+  String configString = "{\"last_edited\": \"2018-04-16\", \"meta\": \"temperature starter kit\", \"channels\": { \"001\": { \"display_name\": \"Temperature\", \"description\": \"temperature\", \"properties\": { \"data_type\": \"TEMPERATURE\", \"data_unit\": \"DEG_CELSIUS\" } } } }";
+  String writeString = "config_io=" + configString;
+  String returnString = "";
+  
+  do {
+    Serial.println("Write Config Attempt: " + String(num_tries));
+    rtn = exosite.writeRead(writeString, readString, returnString);
+
+    if (rtn) {
+      Serial.println("Write Config Successful");
+    }
+    num_tries++;
+  } while (rtn == 0);
 }
 
 
