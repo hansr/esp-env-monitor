@@ -1,7 +1,8 @@
 /*******************************************************************************
 * esp-env-monitor
 * Arduino program that uses the Sparkfun ESP8266 Thing Dev board
-* to send analog values (temp, light) to Exosite using SSL
+* to read and send temp values from dallas one wire sensor and analog
+* values (light or other sensors) to Exosite using SSL
 * For more information, see README file
 ********************************************************************************
 * Tested with Arduino 1.8.5, ESP8266 Thing Dev circa March 2018
@@ -15,10 +16,13 @@
 #include <Wire.h>
 #include <Exosite.h>
 #include <EEPROM.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 /* Definitions */
-#define TEMP_GND 15
-#define TEMP_VCC 16
+#define ONE_WIRE_BUS 2
+#define ADC_GND_PIN 15
+#define ADC_VCC_PIN 16
 #define LED 5
 #define SL_DRIVER_VERSION 1
 #define productId "PUTPRODUCTIDHERE" // Must be updated to match the Product ID for each project
@@ -30,7 +34,7 @@ const char* ssid     = "PUTWIFISSIDHERE";
 const char* password = "PUTWIFIPASSPHRASEHERE";
 
 // Communication URL for Exosite
-const char* host = "PUTPRODUCTIDHERE.m2.exosite.io";
+const char* host = productId".m2.exosite.io";
 const int hostPort = 443;  // use SSL port
 
 // SHA1 fingerprint of the Exosite certificate
@@ -48,7 +52,10 @@ unsigned char errorCount = reprovisionAfter;  // Force Provision On First Loop
 
 WiFiClientSecure client;
 Exosite exosite(&client);
-
+// Setup a oneWire instance to communicate with any OneWire devices  
+OneWire oneWire(ONE_WIRE_BUS); 
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire);
 
 /*******************************************************************************
 * Startup Entry Point
@@ -58,17 +65,20 @@ void setup() {
   delay(100);
 
   // Configure GPIO
-  pinMode(TEMP_GND, INPUT); 
-  pinMode(TEMP_VCC, INPUT); 
+  pinMode(ADC_GND_PIN, INPUT); 
+  pinMode(ADC_VCC_PIN, INPUT); 
   pinMode(LED, OUTPUT);
   blinkLED(5);
     
   // Init EEPROM
   EEPROM.begin(40);
+
+  // startup dallas and onewire libraries
+  sensors.begin(); 
   
   // Configure Exosite
   exosite.begin();
-  exosite.setDomain(productId".m2.exosite.io", hostPort);
+  exosite.setDomain(host, hostPort);
 
   // Configure WiFi
   setup_wifi();
@@ -88,6 +98,9 @@ void setup() {
     Serial.println("setup: Provision Check Done");
   }
   
+  // send config details to RCM.
+  writeDeviceConfigRCM(); 
+  
 }
 
 
@@ -102,6 +115,8 @@ void loop() {
   int lastIndex = -1;
   int d5_val = 0;
   char d5_str[10];
+  int a0_val = 0;
+  double temp_val = 0.0;
 
   // Check if we should reprovision.
   if (errorCount >= reprovisionAfter) {
@@ -114,10 +129,25 @@ void loop() {
     } else Serial.println("Reprovision: Provision Check Done");
   }
   
+  // compute number of seconds this board has been running
   String uptime_str = String(millis()/1000);
+  Serial.print("Uptime = "); 
+  Serial.println(uptime_str);
+  
+  // read the connected analog sensor
+  a0_val = readAnalogSensor();
+  Serial.print("A0 = "); 
+  Serial.println(String(a0_val));
+
+  // read the connected digital temp sensor
+  sensors.requestTemperatures(); 
+  temp_val = sensors.getTempCByIndex(0);
+  Serial.print("Temperature = ");
+  Serial.println(String(temp_val)); 
   
   writeString += "uptime="+ uptime_str;
-  writeString += "&a0="+ String(readTemp());
+  writeString += "&a0="+ String(a0_val);
+  writeString += "&data_in={ \"001\":" + String(temp_val) + "}";
 
   //Make Write and Read request to Exosite Platform
   Serial.println("---- Do Read and Write ----");
@@ -231,24 +261,47 @@ void setup_wifi(void){
 
 
 /*******************************************************************************
+* Write Device Config RCM
+* - send config_io, so RCM knows we will be sending temperature in celsius
+*******************************************************************************/
+int writeDeviceConfigRCM() {
+  int rtn = 0;
+  int num_tries = 0;
+  
+  String configString = "{\"last_edited\": \"2018-04-16\", \"meta\": \"temperature starter kit\", \"channels\": { \"001\": { \"display_name\": \"Temperature\", \"description\": \"temperature\", \"properties\": { \"data_type\": \"TEMPERATURE\", \"data_unit\": \"DEG_CELSIUS\" } } } }";
+  String writeString = "config_io=" + configString;
+  String returnString = "";
+  
+  do {
+    Serial.println("Write Config Attempt: " + String(num_tries));
+    rtn = exosite.writeRead(writeString, readString, returnString);
+
+    if (rtn) {
+      Serial.println("Write Config Successful");
+    }
+    num_tries++;
+  } while (rtn == 0);
+}
+
+
+/*******************************************************************************
 * Read Temperature
 *******************************************************************************/
-int readTemp() { 
-  int temp_val;
-  pinMode(TEMP_VCC, OUTPUT); 
-  pinMode(TEMP_GND, OUTPUT); 
-  digitalWrite(TEMP_VCC, 1);
-  digitalWrite(TEMP_GND, 0);
+int readAnalogSensor() { 
+  int analog_val;
+  pinMode(ADC_VCC_PIN, OUTPUT); 
+  pinMode(ADC_GND_PIN, OUTPUT); 
+  digitalWrite(ADC_VCC_PIN, 1);
+  digitalWrite(ADC_GND_PIN, 0);
 
   delay(100); // Let supplies settle
-  Serial.print("Temp A0 = "); 
-  temp_val = readADC();
-  Serial.println(String(temp_val));
   
-  pinMode(TEMP_VCC, INPUT); 
-  pinMode(TEMP_GND, INPUT);
+  analog_val = readADC();
+  
+  pinMode(ADC_VCC_PIN, INPUT); 
+  pinMode(ADC_GND_PIN, INPUT);
 
-  return temp_val;
+  return analog_val;
 }
 
     
