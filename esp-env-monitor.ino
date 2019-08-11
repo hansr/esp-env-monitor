@@ -32,9 +32,10 @@
 #define SL_DRIVER_VERSION 1
 #define NV_SIZE 128 // just using a part of the NV / EEPROM sim for our purposes
 
-// This is the product ID for the Exosite IoT Connector.  Go online to <TODO-URL> to claim and configure
-// how the device interacts with the rest of the world.
-#define productId "PUTPRODUCTIDHERE" 
+// This is the product ID for the Exosite IoT Connector for the "espenvmonitor" PDaaS
+// Product.  Go online to <TODO-URL> to claim and configure how the device interacts 
+// with the rest of the world.
+#define productId "e4l0qt481td400000" //"PUTPRODUCTIDHERE" if you are making your own IoT product
 
 /* Constants */
 // Optional default bomb-proof wifi network credentials for fallback (backup to the backup plan)
