@@ -31,6 +31,7 @@
 #define LED 5
 #define SL_DRIVER_VERSION 1
 #define NV_SIZE 128 // just using a part of the NV / EEPROM sim for our purposes
+#define MAX_ERRORS 3 // if we exceed this number of communications errors, we trigger reprovisioning sequence
 
 // This is the product ID for the Exosite IoT Connector for the "espenvmonitor" PDaaS
 // Product.  Go online to <TODO-URL> to claim and configure how the device interacts 
@@ -54,13 +55,10 @@ const char* fingerprint = "51 8C 0D C5 A1 6C 9E C2 33 11 F9 34 8A 89 47 8A 3B 47
 const unsigned char nv_ssid_ptr = 41;
 const unsigned char nv_password_ptr = 71;
 
-// Number of communication errors before we try a reprovision.
-const unsigned char reprovisionAfter = 3;
-
 /* Global Variables */
 char macString[18];  // Used to store a formatted version of the MAC Address
 byte macData[WL_MAC_ADDR_LENGTH];
-String readString = "state&d5&msg";
+String readString = "d5&cmd";
 String prevRead = "";
 unsigned char errorCount = 0;  
 
@@ -121,10 +119,10 @@ void loop() {
   double temp_val = 0.0;
 
   // Check if we should attempt reconnect (could be for a variety of reasons)
-  if (errorCount >= reprovisionAfter) {
+  if (errorCount >= MAX_ERRORS) {
     Serial.println("---- Too many connection errors, attempting reprovision ----");
     blinkLED(4);
-    connect_iot();
+    if (connect_iot()) errorCount = 0;
   }
 
   Serial.println("\r\n---- Collecting board sensor & system data ----");
@@ -156,12 +154,14 @@ void loop() {
       prevRead = returnString;
       Serial.print("Returned from cloud: ");
       Serial.println(returnString);
+      Serial.print("Length of returned string is ");
+      Serial.println(strlen(returnString.c_str()));
       Serial.println("Parsing dataport alias values...");
 
       // Read out our data ports
       for (;;) {
         indexer = returnString.indexOf("=", lastIndex + 1);
-        if (indexer != 0) {
+        if ((indexer > 0) && (indexer < strlen(returnString.c_str()))) {
           String alias = "";
           tempString = returnString.substring(lastIndex + 1, indexer);
           lastIndex = returnString.indexOf("&", indexer + 1);
@@ -185,14 +185,14 @@ void loop() {
               digitalWrite(LED, 1);
               exosite.writeRead("d5=1", readString, returnString); // set the ds back to 0 to ack
             }
-          } else if (alias == "msg") {
-            Serial.print("Message: ");
+          } else if (alias == "cmd") {
+            Serial.print("Command: ");
             Serial.println(tempString);
-            exosite.writeRead("msg=ack", readString, returnString); // set the ds to ack
-          } else if (alias == "state") {
-            Serial.print("State: ");
-            Serial.println(tempString);
-            exosite.writeRead("state=ack", readString, returnString); // set the ds to ack
+            if (!strcmp((char *)tempString.c_str(),"reprovision")) {
+              Serial.println("Got reprovision command from the cloud, triggering reprovision sequence");
+              errorCount = MAX_ERRORS;
+            }
+            exosite.writeRead("cmd=ack", readString, returnString); // set the ds to ack
           } else {
             Serial.println("Unknown alias");
           }
@@ -272,14 +272,14 @@ bool connect_iot(void) {
       provision_identity();
 
       // Let's try to read SSID and Passphrase
-      if ((exosite.writeRead("", "SSID", returnString)) && (2 < returnString.length()) && (5 + sizeof(ssid) > returnString.length())) {
-        returnString = returnString.substring(5); // we ignore the "SSID=" part
+      if ((exosite.writeRead("", "SSID", returnString)) && (2 < returnString.length()) && (5 + sizeof(ssid) > returnString.length()) && (returnString.indexOf("=") > 0)) {
+        returnString = returnString.substring(returnString.indexOf("=") + 1); // we ignore the "SSID=" part
         strcpy(ssid, (char *)returnString.c_str());
         Serial.print("Found a cloud-specified WiFi SSID: ");
         Serial.println(ssid);
         // using len of 12 here because cloud resource can't be set to null - assuming no-one will use a 1 char passphrase - sorry in advance...
-        if ((exosite.writeRead("", "Passphrase", returnString)) && (12 < returnString.length()) && (11 + sizeof(password) > returnString.length())) {                  
-          returnString = returnString.substring(11); // we ignore the "Passphrase=" part
+        if ((exosite.writeRead("", "Passphrase", returnString)) && (12 < returnString.length()) && (11 + sizeof(password) > returnString.length()) && (returnString.indexOf("=") > 0)) {                  
+          returnString = returnString.substring(returnString.indexOf("=") + 1); // we ignore the "Passphrase=" part
           strcpy(password, (char *)returnString.c_str());
           Serial.print("Found a cloud-specified WiFi passphrase (hidden) of length: ");
           Serial.println(strlen(password));
@@ -372,6 +372,12 @@ bool connect_iot(void) {
   setNVString(nv_ssid_ptr, ssid, strlen(ssid));
   setNVString(nv_password_ptr, password, strlen(password));
   EEPROM.commit();   // commit does not release RAM, just programs the flash.  eeprom.end will release RAM and requires eeprom.begin to be called again
+  {
+    String returString = "";
+    if (exosite.writeRead("state={ \"SSID\":" + String(ssid) + "}", "", returnString)) {
+      Serial.println("Wrote our GW SSID to the cloud so NOC knows how we are connecting");
+    }
+  }
   blinkLED(4);  // signal success!
   return true;
 }
