@@ -341,7 +341,7 @@ bool connect_iot(void) {
               if (false == tried) {
                 strcpy(password, nullpass);
                 strcpy(attempted_ssids[ssids_saved], ssid);
-                ssids_saved++;
+                if(ssids_saved++ > 15) ssids_saved = 0; // don't overrun the buffer if we find more than 15 unique open networks to run through
   
                 Serial.print("Trying network: ");
                 Serial.println(ssid);
