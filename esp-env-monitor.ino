@@ -308,6 +308,7 @@ bool connect_iot(void) {
 
     if (true == retry) {
       Serial.println("\r\nSSID didn't work, trying a new one");
+      blinkLED(1);  // give us a visible heart beat if we are stuck in non connected hell
 
       // Set WiFi to station mode and disconnect from an AP if it was previously connected
       WiFi.mode(WIFI_STA);
@@ -358,7 +359,7 @@ bool connect_iot(void) {
         }
         if (i == n) { // we have exhausted network options
           ssids_saved = 0; // best bet is just to retry them all...
-          Serial.println("Exhausted open networks in range, retrying full list.  Make sure there is an open network in range, make sure the Product ID is set, and make sure a 'Passphrase' and 'SSID' resource with valid credentials are available in the cloud.");
+          Serial.println("Exhausted open networks in range, retrying full list.");
         }
       }
 
@@ -371,7 +372,7 @@ bool connect_iot(void) {
   setNVString(nv_ssid_ptr, ssid, strlen(ssid));
   setNVString(nv_password_ptr, password, strlen(password));
   EEPROM.commit();   // commit does not release RAM, just programs the flash.  eeprom.end will release RAM and requires eeprom.begin to be called again
-
+  blinkLED(4);  // signal success!
   return true;
 }
 
