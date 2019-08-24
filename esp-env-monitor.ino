@@ -36,7 +36,7 @@
 // This is the product ID for the Exosite IoT Connector for the "espenvmonitor" PDaaS
 // Product.  Go online to <TODO-URL> to claim and configure how the device interacts 
 // with the rest of the world.
-#define productId "e4l0qt481td400000" //"PUTPRODUCTIDHERE" if you are making your own IoT product
+#define productId "j1b0l7vyy5ajk0000" //"PUTPRODUCTIDHERE" if you are making your own IoT product
 
 /* Constants */
 // Optional default bomb-proof wifi network credentials for fallback (backup to the backup plan)
