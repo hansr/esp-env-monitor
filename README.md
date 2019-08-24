@@ -20,8 +20,9 @@ network in NV memory.
 Once the system has a solid net connection,  it will just spin happily in a 10
 second loop sending Uptime, Analog reading, and Temperature reading (from the
 Dallas OneWire chip) to the cloud, and will read a few resources from the cloud - 
-most notably the value of "d5" - a '0' in that resource will turn the LED on, 
-and a '1' will turn it off.
+most notably: 1) the value of "d5" - a '0' in that resource will turn the LED on, 
+and a '1' will turn it off 2) the value of "cmd" - a value of "reprovision" will
+force an identity and WiFi credential reprovision sequence.
 
 License is BSD, Copyright 2018 2019, Exosite LLC (see LICENSE file)
 
@@ -49,12 +50,12 @@ Quick Start
     won't let the traffic through.  
 
 * Claim your device
-  * Go to the Product as a Service URL (TODO) for this system and claim your 
-    device.  You can establish an account for this product there and setup 
-    web service targets that can interact with your devices.  ExoSense, Exosite's
-    remote condition monitoring tool (fancy dashboarding system), is supported
-    by default - you can claim the device actually from within your ExoSense
-    installation
+  * Go to the Product as a Service URL (https://j1b0l7vyy5ajk0000.apps.exosite.io/)
+    for this system and claim your device.  You can establish an account for this 
+    product there and setup web service targets that can interact with your 
+    devices.  ExoSense, Exosite's remote condition monitoring tool (fancy 
+    dashboarding system), is supported by default - you can claim the device 
+    actually from within your ExoSense installation
 
 * Setup preferred WiFi credentials for the device
   * Set the "SSID" and "Passphrase" resource for the desired WiFi connection
@@ -94,7 +95,6 @@ your own Product as a Service that others can use, here are some tips
   * Note that this is not required - the board will find its own network from
     your cloud settings if it is given an open network to figure things out
     
-
 * Turn on an open WiFi network within range or ensure the WiFi network you
   hard coded is in range
   * This will allow the device to connect to the Internet and get secure (or
