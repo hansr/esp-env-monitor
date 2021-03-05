@@ -15,7 +15,7 @@ connect out to the Internet, it will provision itself and pull down proper WiFi
 credentials as configured in the cloud, and then will connect with those WiFi
 credentials.  If the credentials don't work, it will fall back to the open
 network it found.  If that network goes away, it will fall back to the last good
-network in NV memory.  
+network in non-volatile memory.
 
 Once the system has a solid net connection,  it will just spin happily in a 10
 second loop sending Uptime, Analog reading, and Temperature reading (from the
